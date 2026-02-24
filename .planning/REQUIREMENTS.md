@@ -63,26 +63,24 @@ Explicitly excluded from the PoC. Documented to prevent scope creep.
 
 ## Traceability
 
-Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BOARD-01 | — | Pending |
-| BOARD-02 | — | Pending |
-| DRAG-01 | — | Pending |
-| DRAG-02 | — | Pending |
-| DRAG-03 | — | Pending |
-| CONN-01 | — | Pending |
-| CONN-02 | — | Pending |
-| CONN-03 | — | Pending |
-| CONN-04 | — | Pending |
-| EXPV-01 | — | Pending |
+| BOARD-01 | Phase 1 | Pending |
+| BOARD-02 | Phase 1 | Pending |
+| DRAG-01 | Phase 2 | Pending |
+| DRAG-02 | Phase 2 | Pending |
+| DRAG-03 | Phase 2 | Pending |
+| CONN-01 | Phase 3 | Pending |
+| CONN-02 | Phase 3 | Pending |
+| CONN-03 | Phase 3 | Pending |
+| CONN-04 | Phase 3 | Pending |
+| EXPV-01 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 10 total
-- Mapped to phases: 0 (populated after roadmap creation)
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 after initial definition*
+*Last updated: 2026-02-24 after roadmap creation*
