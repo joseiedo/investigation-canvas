@@ -28,7 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The board has a cork/dark textured background that reads as a detective wall, not a generic webpage
   3. 5 distinct evidence cards are visible on the board, each with its own title label
   4. Cards have a pinned, physical appearance (pin pseudo-element visible at top of each card)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Create index.html: full-viewport cork board + 5 evidence cards (HTML/CSS)
+- [ ] 01-02-PLAN.md — Human visual verification of board aesthetic
 
 ### Phase 2: Card Drag
 **Goal**: Users can freely reposition evidence cards anywhere on the board with correct visual and cursor feedback
@@ -70,7 +74,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Static Board Layout | 0/TBD | Not started | - |
+| 1. Static Board Layout | 0/2 | Not started | - |
 | 2. Card Drag | 0/TBD | Not started | - |
 | 3. SVG Connections | 0/TBD | Not started | - |
 | 4. Expanded Detail View | 0/TBD | Not started | - |
