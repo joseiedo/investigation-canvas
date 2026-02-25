@@ -31,18 +31,18 @@ Requirements for the initial PoC release.
 
 ## v2 Requirements
 
-Deferred to a future iteration.
-
-### Cards & Aesthetics
-
-- **CARD-01**: Each evidence card has a visible thumbtack/pin at the top (CSS pseudo-element)
-- **CARD-02**: Each evidence card has a slight random rotation applied (lived-in, physical feel)
-
 ### Annotation
 
-- **ANNO-01**: In the expanded view, user can draw freehand on the evidence card using a canvas element
-- **ANNO-02**: In the expanded view, user can type a text note in a textarea field
-- **ANNO-03**: Freehand drawings and text notes persist across open/close of the expanded view within the same browser session
+- [ ] **ANNO-01**: In the expanded view, user can draw with a **red pen** and **eraser** on a canvas element overlaying the evidence
+- [ ] **ANNO-02**: Drawings are mirrored in real-time to the card visible on the main board (scaled down)
+- [ ] **ANNO-03**: In the expanded view, user can type a text note in a textarea field below the evidence
+
+### Persistence
+
+- [ ] **PERS-01**: Card positions (x, y) persist in localStorage
+- [ ] **PERS-02**: SVG red string connections persist in localStorage
+- [ ] **PERS-03**: Drawings and text notes persist in localStorage
+- [ ] **PERS-04**: A "Reset Board" button exists to clear all local data and return to defaults
 
 ## Out of Scope
 
@@ -65,16 +65,23 @@ Explicitly excluded from the PoC. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BOARD-01 | Phase 1 | Pending |
-| BOARD-02 | Phase 1 | Pending |
-| DRAG-01 | Phase 2 | Pending |
-| DRAG-02 | Phase 2 | Pending |
-| DRAG-03 | Phase 2 | Pending |
-| CONN-01 | Phase 3 | Pending |
-| CONN-02 | Phase 3 | Pending |
-| CONN-03 | Phase 3 | Pending |
-| CONN-04 | Phase 3 | Pending |
-| EXPV-01 | Phase 4 | Pending |
+| BOARD-01 | Phase 1 | DONE |
+| BOARD-02 | Phase 1 | DONE |
+| DRAG-01 | Phase 2 | DONE |
+| DRAG-02 | Phase 2 | DONE |
+| DRAG-03 | Phase 2 | DONE |
+| CONN-01 | Phase 3 | DONE |
+| CONN-02 | Phase 3 | DONE |
+| CONN-03 | Phase 3 | DONE |
+| CONN-04 | Phase 3 | DONE |
+| EXPV-01 | Phase 4 | DONE |
+| ANNO-01 | Phase 5 | DONE |
+| ANNO-02 | Phase 5 | DONE |
+| ANNO-03 | Phase 6 | DONE |
+| PERS-01 | Phase 7 | DONE |
+| PERS-02 | Phase 7 | DONE |
+| PERS-03 | Phase 7 | DONE |
+| PERS-04 | Phase 7 | DONE |
 
 **Coverage:**
 - v1 requirements: 10 total
