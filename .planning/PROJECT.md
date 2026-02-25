@@ -16,13 +16,11 @@ A tactile, movie-like investigation board where players can visually connect clu
 
 ### Active
 
-- [ ] Full-viewport board as the canvas
-- [ ] 5 pre-set rectangular/square evidence cards with pin aesthetic
-- [ ] Drag evidences freely anywhere on the board
-- [ ] Toggle "connect mode" to link two evidences with a red string line
-- [ ] Click an evidence to expand it into a detail view
-- [ ] In expanded view: free-hand drawing on the evidence (canvas)
-- [ ] In expanded view: type and save a text annotation
+- [ ] Animated zoom-to-card expansion with left-center positioning
+- [ ] Dimming backdrop for focus during zoom
+- [ ] Side "desk" panel for drawing tools and notes
+- [ ] High-resolution direct-on-card drawing logic
+- [ ] Smooth un-zoom interaction by clicking the background
 
 ### Out of Scope
 

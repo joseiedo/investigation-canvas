@@ -42,10 +42,10 @@
 
     .card.dragging { cursor: grabbing; z-index: 1000 !important; }
     
-    .card-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 25; }
-    .card img { width: 100%; height: auto; border: 1px solid #2a1f14; filter: sepia(0.3); }
-    .card-text { font-family: 'Courier New', monospace; font-size: 11px; font-style: italic; }
-    .card-title { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; text-transform: uppercase; }
+    .card-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 25; width: 100%; height: 100%; }
+    .card img { width: 100%; height: auto; border: 1px solid #2a1f14; filter: sepia(0.3); pointer-events: none; -webkit-user-drag: none; }
+    .card-text { font-family: 'Courier New', monospace; font-size: 11px; font-style: italic; pointer-events: none; }
+    .card-title { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; text-transform: uppercase; pointer-events: none; }
 
     .card::before {
       content: ""; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
@@ -62,40 +62,40 @@
     #toggle-connect.active { background: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
     #reset-board { bottom: 20px; right: 20px; background: rgba(0,0,0,0.5); color: #ccc; font-size: 10px; }
 
-    dialog {
-      padding: 40px; border: none; border-radius: 8px; background: #fdf6e3;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 600px; width: 95%;
-      font-family: 'Courier New', monospace; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    #focus-backdrop {
+      position: absolute; top: -50000px; left: -50000px; width: 100000px; height: 100000px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(2px); z-index: 800; opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease;
     }
-    dialog::backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
-    #close-dialog { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #922b21; }
-    #drawing-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
-    #drawing-toolbar button { padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; font-family: inherit; font-weight: bold; }
-    #drawing-toolbar button.active { background: #922b21; color: white; border-color: #922b21; }
+    #focus-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    #desk-panel {
+      position: fixed; top: 0; right: -45%; width: 40%; height: 100%;
+      background: #3c2f21; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+      z-index: 600; padding: 40px; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+      font-family: 'Courier New', monospace; color: #fdf6e3;
+      transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    #desk-panel.active { right: 0; }
+    
+    #close-desk { position: absolute; top: 10px; left: 15px; background: none; border: none; font-size: 32px; cursor: pointer; color: #e74c3c; }
+    #drawing-toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+    #drawing-toolbar button { padding: 8px 12px; cursor: pointer; border: 1px solid rgba(253, 246, 227, 0.3); background: rgba(0,0,0,0.2); color: inherit; font-family: inherit; font-weight: bold; border-radius: 4px; }
+    #drawing-toolbar button.active { background: #e74c3c; color: white; border-color: #e74c3c; }
     
     .highlight { background-color: #f1c40f; color: #000; }
-    #dialog-text { user-select: text !important; pointer-events: auto !important; z-index: 40 !important; position: relative; }
 
-    #card-note { width: 100%; height: 100px; margin-top: 10px; font-family: inherit; padding: 10px; }
+    #card-note { width: 100%; flex-grow: 1; font-family: inherit; padding: 15px; background: rgba(0,0,0,0.15); color: #fdf6e3; border: 1px solid rgba(253, 246, 227, 0.1); border-radius: 4px; resize: none; }
 
-    #dialog-title-input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid #2a1f14;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 24px;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #1a1a1a;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      outline: none;
+    #desk-title-input {
+      width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(253, 246, 227, 0.3);
+      font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: bold; text-transform: uppercase;
+      color: #fdf6e3; padding-bottom: 10px; outline: none;
     }
 
-    #expanded-canvas-container { position: relative; margin-bottom: 20px; width: 100%; aspect-ratio: 1.6; border: 1px solid #2a1f14; background: #fdf6e3; overflow: hidden; }
-    #expanded-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; z-index: 30; }
-    #dialog-image, #dialog-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-height: 90%; object-fit: contain; pointer-events: none; z-index: 10; }
+    #desk-panel h3 { font-size: 14px; opacity: 0.7; text-transform: uppercase; margin-bottom: -10px; }
   </style>
 </head>
 <body>
@@ -104,24 +104,25 @@
     <button id="reset-board">Reset Board</button>
     
     <div id="world">
+      <div id="focus-backdrop"></div>
       <svg id="connections-layer" width="5000" height="5000"></svg>
       
       <div class="card" style="top: 12%; left: 8%; transform: rotate(-3deg)" data-index="0">
         <canvas class="card-canvas"></canvas>
         <span class="card-title">Suspect A</span>
-        <img src="https://i.pinimg.com/736x/a4/90/c1/a490c10e7e2c54b2ea2a8e0dfdbc1f3a.jpg">
+        <img src="https://i.pinimg.com/736x/a4/90/c1/a490c10e7e2c54b2ea2a8e0dfdbc1f3a.jpg" draggable="false">
       </div>
       
       <div class="card" style="top: 55%; left: 18%; transform: rotate(2deg)" data-index="1">
         <canvas class="card-canvas"></canvas>
         <span class="card-title">Victim</span>
-        <img src="https://i.pinimg.com/736x/e6/c9/be/e6c9bebea93ea6662f0f5647fad5952a.jpg">
+        <img src="https://i.pinimg.com/736x/e6/c9/be/e6c9bebea93ea6662f0f5647fad5952a.jpg" draggable="false">
       </div>
       
       <div class="card" style="top: 20%; left: 42%; transform: rotate(-1deg)" data-index="2">
         <canvas class="card-canvas"></canvas>
         <span class="card-title">Crime Scene</span>
-        <img src="https://townsquare.media/site/704/files/2025/01/attachment-october-2023-october-2024-2025-01-22T160209.904.jpg?w=780&q=75">
+        <img src="https://townsquare.media/site/704/files/2025/01/attachment-october-2023-october-2024-2025-01-22T160209.904.jpg?w=780&q=75" draggable="false">
       </div>
       
       <div class="card" style="top: 58%; left: 60%; transform: rotate(4deg)" data-index="3">
@@ -133,12 +134,22 @@
       <div class="card" style="top: 15%; left: 74%; transform: rotate(-2deg)" data-index="4">
         <canvas class="card-canvas"></canvas>
         <span class="card-title">Witness</span>
-        <img src="https://yt3.googleusercontent.com/t_gDv96OAt41Y6IkBCjJWmGCHYzH9vuwzGuHFWnyoXHZnB53P5ULlGEAHIeYxSSlNgp_vDMwQf8=s900-c-k-c0x00ffffff-no-rj">
+        <img src="https://yt3.googleusercontent.com/t_gDv96OAt41Y6IkBCjJWmGCHYzH9vuwzGuHFWnyoXHZnB53P5ULlGEAHIeYxSSlNgp_vDMwQf8=s900-c-k-c0x00ffffff-no-rj" draggable="false">
+      </div>
+
+      <div class="card" style="top: 45%; left: 82%; transform: rotate(1deg); width: 240px;" data-index="5">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Detailed Alibi</span>
+        <p class="card-text">"I was at the Blue Velvet Lounge from 9 PM until closing. I have a receipt for three gin fizzes, and the bartender, a fellow named 'Slim', can vouch for me. I didn't leave my seat once, except to play 'Stardust' on the jukebox at 10:15 PM. You can ask anyone there, I was the one in the pinstripe suit. I don't know anything about no heist."</p>
       </div>
     </div>
 
-    <dialog id="card-detail">
-      <button id="close-dialog">&times;</button>
+    <div id="desk-panel">
+      <button id="close-desk">&times;</button>
+      <h3>Evidence Name</h3>
+      <input id="desk-title-input" type="text" placeholder="Enter Evidence Name...">
+      
+      <h3>Markings</h3>
       <div id="drawing-toolbar">
         <button id="tool-pen-red" class="active" style="color: #e74c3c">Red</button>
         <button id="tool-pen-blue" style="color: #3498db">Blue</button>
@@ -146,14 +157,10 @@
         <button id="tool-eraser">Eraser</button>
         <button id="tool-highlight" style="display: none; background: #f1c40f; color: #000;">Highlight</button>
       </div>
-      <div id="expanded-canvas-container">
-        <img id="dialog-image" src="">
-        <p id="dialog-text"></p>
-        <canvas id="expanded-canvas"></canvas>
-      </div>
-      <input id="dialog-title-input" type="text" placeholder="Enter Evidence Name...">
+      
+      <h3>Case Notes</h3>
       <textarea id="card-note" placeholder="Notes..."></textarea>
-    </dialog>
+    </div>
   </div>
 
   <script>
@@ -168,15 +175,14 @@
     const board = document.getElementById('board');
     const world = document.getElementById('world');
     const svgLayer = document.getElementById('connections-layer');
-    const dialog = document.getElementById('card-detail');
-    const expandedCanvas = document.getElementById('expanded-canvas');
-    const expCtx = expandedCanvas.getContext('2d');
+    const deskPanel = document.getElementById('desk-panel');
+    const focusBackdrop = document.getElementById('focus-backdrop');
     const toggleBtn = document.getElementById('toggle-connect');
     const cardNoteTextarea = document.getElementById('card-note');
-    const titleInput = document.getElementById('dialog-title-input');
+    const titleInput = document.getElementById('desk-title-input');
     const highlightBtn = document.getElementById('tool-highlight');
     const eraserBtn = document.getElementById('tool-eraser');
-    const dialogTxt = document.getElementById('dialog-text');
+    const closeDeskBtn = document.getElementById('close-desk');
 
     // Persistence
     let cardData = JSON.parse(localStorage.getItem('investigation_drawings') || '{}');
@@ -208,7 +214,8 @@
       document.querySelectorAll('.card').forEach(card => {
         const idx = card.dataset.index;
         const canvas = card.querySelector('.card-canvas');
-        canvas.width = 160; canvas.height = 100;
+        // High-res canvas (5x resolution for 160x100 visual size)
+        canvas.width = 800; canvas.height = 500;
         if (cardPositions[idx]) {
           card.style.left = cardPositions[idx].left;
           card.style.top = cardPositions[idx].top;
@@ -238,44 +245,14 @@
       });
     }
 
-    // Highlighting & Erasing Text Logic
-    dialogTxt.addEventListener('mouseup', () => {
-      if (currentTool !== 'highlighter') return;
-      const selection = window.getSelection();
-      if (!selection.rangeCount || selection.isCollapsed) return;
-      const range = selection.getRangeAt(0);
-      if (!dialogTxt.contains(range.commonAncestorContainer)) return;
-
-      const span = document.createElement('span');
-      span.className = 'highlight';
-      try {
-        const contents = range.extractContents();
-        span.appendChild(contents);
-        range.insertNode(span);
-        updateHighlights();
-        selection.removeAllRanges();
-      } catch (e) { console.error(e); }
-    });
-
-    dialogTxt.addEventListener('click', (e) => {
-      if (currentTool !== 'eraser') return;
-      if (e.target.classList.contains('highlight')) {
-        const span = e.target;
-        span.replaceWith(...span.childNodes);
-        updateHighlights();
-      }
-    });
-
+    // Highlighting & Erasing Text Logic (Placeholder for Refactor)
     function updateHighlights() {
-      cardHighlights[currentCardIndex] = dialogTxt.innerHTML;
-      const boardCard = document.querySelector(".card[data-index='" + currentCardIndex + "']");
-      const boardTxt = boardCard.querySelector('.card-text');
-      if (boardTxt) boardTxt.innerHTML = dialogTxt.innerHTML;
-      save();
+      // To be refactored in next step
     }
 
     // Navigation
     board.addEventListener('wheel', (e) => {
+      if (currentCardIndex !== null) return; // Disable pan/zoom when focused on a card
       e.preventDefault();
       const rect = board.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
@@ -286,6 +263,7 @@
     }, { passive: false });
 
     board.addEventListener('mousedown', (e) => {
+      if (currentCardIndex !== null) return;
       if (e.target === board || e.target === svgLayer) {
         isPanning = true; lastPanPos = {x:e.clientX, y:e.clientY}; board.style.cursor = 'grabbing';
       }
@@ -296,31 +274,57 @@
         panX += e.clientX - lastPanPos.x; panY += e.clientY - lastPanPos.y;
         lastPanPos = {x:e.clientX, y:e.clientY}; updateWorld();
       }
-      if (isDrawing && currentTool !== 'highlighter' && currentTool !== 'eraser') {
-        const r = expandedCanvas.getBoundingClientRect();
-        const x = e.clientX - r.left, y = e.clientY - r.top;
-        expCtx.lineWidth = 4;
-        expCtx.lineCap = 'round';
-        expCtx.globalCompositeOperation = 'source-over';
-        expCtx.strokeStyle = currentMarkerColor;
-        expCtx.lineTo(x, y); expCtx.stroke(); mirror();
-      } else if (isDrawing && currentTool === 'eraser' && !currentCardIndexIsText()) {
-        const r = expandedCanvas.getBoundingClientRect();
-        const x = e.clientX - r.left, y = e.clientY - r.top;
-        expCtx.lineWidth = 15;
-        expCtx.lineCap = 'round';
-        expCtx.globalCompositeOperation = 'destination-out';
-        expCtx.lineTo(x, y); expCtx.stroke(); mirror();
+      if (isDrawing && currentCardIndex !== null) {
+        const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+        const canvas = card.querySelector('.card-canvas');
+        const ctx = canvas.getContext('2d');
+        const r = canvas.getBoundingClientRect();
+        
+        // Account for high-res internal size (800x500) vs visual size
+        const scaleX = canvas.width / r.width;
+        const scaleY = canvas.height / r.height;
+        const x = (e.clientX - r.left) * scaleX;
+        const y = (e.clientY - r.top) * scaleY;
+        
+        ctx.lineWidth = 15; // Thicker line for high-res
+        ctx.lineCap = 'round';
+        
+        if (currentTool === 'eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = currentMarkerColor;
+        }
+        ctx.lineTo(x, y); ctx.stroke();
       }
     });
 
     window.addEventListener('mouseup', () => {
       if (isPanning) { isPanning = false; board.style.cursor = 'auto'; save(); }
-      if (isDrawing) { isDrawing = false; cardData[currentCardIndex] = expandedCanvas.toDataURL(); save(); }
+      if (isDrawing) { 
+        isDrawing = false; 
+        const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+        cardData[currentCardIndex] = card.querySelector('.card-canvas').toDataURL(); 
+        save(); 
+      }
     });
 
     function handleCardMouseDown(e) {
-      const card = e.currentTarget; e.stopPropagation();
+      const card = e.currentTarget; 
+      if (currentCardIndex !== null) {
+        if (card.dataset.index === currentCardIndex && currentTool !== 'highlighter') {
+          isDrawing = true;
+          const canvas = card.querySelector('.card-canvas');
+          const ctx = canvas.getContext('2d');
+          const r = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / r.width;
+          const scaleY = canvas.height / r.height;
+          ctx.beginPath();
+          ctx.moveTo((e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY);
+        }
+        return;
+      }
+      e.stopPropagation();
       if (isConnectMode) {
         if (!firstSelectedCard) { firstSelectedCard = card; card.style.outline = '3px solid #e74c3c'; }
         else {
@@ -370,83 +374,135 @@
       return !card.querySelector('img');
     }
 
-    function openCard(card) {
-      currentCardIndex = card.dataset.index;
-      const img = card.querySelector('img'), txt = card.querySelector('.card-text'), dImg = document.getElementById('dialog-image'), dTxt = document.getElementById('dialog-text');
-      titleInput.value = card.querySelector('.card-title').textContent;
-      cardNoteTextarea.value = cardNotes[currentCardIndex] || '';
-      
-      dImg.style.display = img ? 'block' : 'none'; if(img) dImg.src = img.src;
-      dTxt.style.display = txt ? 'block' : 'none'; if(txt) dTxt.innerHTML = cardHighlights[currentCardIndex] || txt.innerHTML;
-      
-      const toolbar = document.getElementById('drawing-toolbar');
-      const penBtns = toolbar.querySelectorAll('[id^="tool-pen-"]');
-      
-      if (img) {
-        penBtns.forEach(b => b.style.display = 'inline-block'); highlightBtn.style.display = 'none';
-        expandedCanvas.style.display = 'block'; setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
-      } else {
-        penBtns.forEach(b => b.style.display = 'none'); highlightBtn.style.display = 'inline-block';
-        expandedCanvas.style.display = 'none'; setHighlightTool();
-      }
-      dialog.showModal();
-      setTimeout(() => {
-        if (img) {
-          const r = expandedCanvas.parentNode.getBoundingClientRect();
-          expandedCanvas.width = r.width; expandedCanvas.height = r.height;
-          expCtx.clearRect(0, 0, expandedCanvas.width, expandedCanvas.height);
-          if (cardData[currentCardIndex]) { const i = new Image(); i.onload = () => expCtx.drawImage(i, 0, 0); i.src = cardData[currentCardIndex]; }
-        }
-      }, 50);
-    }
-
-    function mirror() {
-      if (currentCardIndex === null) return;
-      const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
-      const canvas = card.querySelector('.card-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(expandedCanvas, 0, 0, canvas.width, canvas.height);
-    }
-
-    toggleBtn.addEventListener('click', () => {
-      isConnectMode = !isConnectMode; toggleBtn.classList.toggle('active', isConnectMode); board.classList.toggle('connect-mode', isConnectMode);
-      toggleBtn.textContent = "Connect Mode: " + (isConnectMode ? 'ON' : 'OFF');
-      if (!isConnectMode) { if (firstSelectedCard) firstSelectedCard.style.outline = ''; firstSelectedCard = null; }
-    });
-
-    document.getElementById('reset-board').addEventListener('click', () => { if (confirm('Reset?')) { localStorage.clear(); location.reload(); }});
-    document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
-    cardNoteTextarea.addEventListener('input', () => { if (currentCardIndex !== null) { cardNotes[currentCardIndex] = cardNoteTextarea.value; save(); }});
+            let originalNav = { panX: 0, panY: 0, zoom: 1 };
+            let zoomAnimationFrame = null;
+        
+            function animateZoom(targetPX, targetPY, targetZ, duration = 600) {
+              if (zoomAnimationFrame) cancelAnimationFrame(zoomAnimationFrame);
+              const startPX = panX, startPY = panY, startZ = zoom;
+              const startTime = performance.now();
+        
+              function step(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        
+                panX = startPX + (targetPX - startPX) * ease;
+                panY = startPY + (targetPY - startPY) * ease;
+                zoom = startZ + (targetZ - startZ) * ease;
+                updateWorld();
+        
+                if (progress < 1) {
+                  zoomAnimationFrame = requestAnimationFrame(step);
+                } else {
+                  zoomAnimationFrame = null;
+                  save();
+                }
+              }
+              zoomAnimationFrame = requestAnimationFrame(step);
+            }
+        
+                    let originalRotation = "";
+                
+                    function openCard(card) {
+                      currentCardIndex = card.dataset.index;
+                      originalNav = { panX, panY, zoom };
+                      originalRotation = card.style.transform;
+                
+                      const img = card.querySelector('img'), txt = card.querySelector('.card-text');
+                      titleInput.value = card.querySelector('.card-title').textContent;
+                      cardNoteTextarea.value = cardNotes[currentCardIndex] || '';
+                      
+                      const penBtns = document.querySelectorAll('[id^="tool-pen-"]');
+                      if (img) {
+                        penBtns.forEach(b => b.style.display = 'inline-block'); highlightBtn.style.display = 'none';
+                        setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
+                      } else {
+                        penBtns.forEach(b => b.style.display = 'none'); highlightBtn.style.display = 'inline-block';
+                        setHighlightTool();
+                      }
+                      
+                      deskPanel.classList.add('active');
+                      focusBackdrop.classList.add('active');
+                
+                      // Boost z-index to stay above backdrop
+                      card.style.zIndex = 1000;
+                
+                      // Make text cards straight
+                      if (!img) card.style.transform = "rotate(0deg)";
+                
+                      // Calculate target zoom to fill left-center
+                      const targetScreenX = window.innerWidth * 0.28;
+                      const targetScreenY = window.innerHeight * 0.5;
+                      
+                      // Smaller zoom for text cards (0.4 vs 0.7)
+                      const zoomFactor = img ? 0.7 : 0.4;
+                      const targetZ = (window.innerHeight * zoomFactor) / card.offsetHeight;
+                      
+                      const cardCX = card.offsetLeft + card.offsetWidth / 2;
+                      const cardCY = card.offsetTop + card.offsetHeight / 2;
+                      
+                      const targetPX = targetScreenX - cardCX * targetZ;
+                      const targetPY = targetScreenY - cardCY * targetZ;
+                
+                      animateZoom(targetPX, targetPY, targetZ);
+                    }
+                
+                    function closeCard() {
+                      if (currentCardIndex === null) return;
+                      const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+                      currentCardIndex = null;
+                      deskPanel.classList.remove('active');
+                      focusBackdrop.classList.remove('active');
+                      
+                      // Restore z-index and rotation
+                      if (card) {
+                        if (cardPositions[card.dataset.index]) {
+                          card.style.zIndex = cardPositions[card.dataset.index].zIndex;
+                        }
+                        card.style.transform = originalRotation;
+                      }
+                
+                      animateZoom(originalNav.panX, originalNav.panY, originalNav.zoom);
+                    }
+                                toggleBtn.addEventListener('click', () => {
+          isConnectMode = !isConnectMode; toggleBtn.classList.toggle('active', isConnectMode); board.classList.toggle('connect-mode', isConnectMode);
+          toggleBtn.textContent = "Connect Mode: " + (isConnectMode ? 'ON' : 'OFF');
+          if (!isConnectMode) { if (firstSelectedCard) firstSelectedCard.style.outline = ''; firstSelectedCard = null; }
+        });
+    
+        document.getElementById('reset-board').addEventListener('click', () => { if (confirm('Reset?')) { localStorage.clear(); location.reload(); }});
+        closeDeskBtn.addEventListener('click', closeCard);
+        focusBackdrop.addEventListener('click', closeCard);
+        
+            cardNoteTextarea.addEventListener('input', () => { if (currentCardIndex !== null) { cardNotes[currentCardIndex] = cardNoteTextarea.value; save(); }});
     titleInput.addEventListener('input', () => { if (currentCardIndex !== null) { cardTitles[currentCardIndex] = titleInput.value; document.querySelector(".card[data-index='" + currentCardIndex + "']").querySelector('.card-title').textContent = titleInput.value; save(); }});
-
-    expandedCanvas.addEventListener('mousedown', (e) => {
-      if (currentTool === 'highlighter' || currentTool === 'eraser') return;
-      isDrawing = true; expCtx.beginPath(); const r = expandedCanvas.getBoundingClientRect(); expCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
-    });
-
-    function setPen(color, btnId) {
-      currentTool = 'pen'; currentMarkerColor = color;
-      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
-      document.getElementById(btnId).classList.add('active');
-    }
-
-    function setHighlightTool() {
-      currentTool = 'highlighter';
-      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
-      highlightBtn.classList.add('active');
-    }
-
-    document.getElementById('tool-pen-red').onclick = () => setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
-    document.getElementById('tool-pen-blue').onclick = () => setPen('rgba(52, 152, 219, 0.7)', 'tool-pen-blue');
-    document.getElementById('tool-pen-black').onclick = () => setPen('rgba(44, 62, 80, 0.7)', 'tool-pen-black');
-    document.getElementById('tool-eraser').onclick = () => {
-      currentTool = 'eraser';
-      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
-      eraserBtn.classList.add('active');
-    };
-    highlightBtn.onclick = setHighlightTool;
-
-    init();
-  </script>
-</body>
-</html>
+        
+            function setPen(color, btnId) {
+        
+          currentTool = 'pen'; currentMarkerColor = color;
+          document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+          document.getElementById(btnId).classList.add('active');
+        }
+    
+        function setHighlightTool() {
+          currentTool = 'highlighter';
+          document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+          highlightBtn.classList.add('active');
+        }
+    
+        document.getElementById('tool-pen-red').onclick = () => setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
+        document.getElementById('tool-pen-blue').onclick = () => setPen('rgba(52, 152, 219, 0.7)', 'tool-pen-blue');
+        document.getElementById('tool-pen-black').onclick = () => setPen('rgba(44, 62, 80, 0.7)', 'tool-pen-black');
+        document.getElementById('tool-eraser').onclick = () => {
+          currentTool = 'eraser';
+          document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+          eraserBtn.classList.add('active');
+        };
+        highlightBtn.onclick = setHighlightTool;
+    
+        init();
+      </script>
+    </body>
+    </html>
+    

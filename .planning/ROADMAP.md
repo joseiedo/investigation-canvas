@@ -22,8 +22,23 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Board Navigation (Pan/Zoom)** - Navigate a board larger than the viewport
 - [ ] **Phase 9: Investigation Management** - Rename cards and delete red strings
 - [ ] **Phase 10: Contextual Analysis (Highlighting)** - Multi-color markers for images; text highlighting for documents
+- [ ] **Phase 11: Zoom Expand & Split View** - Replace modal dialog with animated zoom, dimming backdrop, and side desk panel for tools/notes
 
 ## Phase Details
+... (keep existing)
+### Phase 11: Zoom Expand & Split View
+**Goal**: Refactor the expansion interaction to feel like a manual zoom-in with a physical side panel
+**Depends on**: Phase 10
+**Requirements**: EXPV-02, EXPV-03, EXPV-04, EXPV-05, ANNO-07
+**Success Criteria**:
+  1. Clicking a card smoothly animates the board zoom to center the card on the left
+  2. A dimming backdrop appears behind the zoomed card but over the rest of the board
+  3. A side panel (desk aesthetic) slides in from the right with all tools and notes
+  4. Drawing works directly on the card at high resolution
+  5. Clicking the background smoothly zooms back out and hides the side panel
+**Plans**: 2 plans
+
+## Progress
 
 ### Phase 1: Static Board Layout
 **Goal**: The board exists as a correctly styled, full-viewport detective wall with 5 evidence cards visible and positioned

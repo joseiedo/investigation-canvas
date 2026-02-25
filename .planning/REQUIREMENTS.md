@@ -25,11 +25,16 @@ Requirements for the initial PoC release.
 - [ ] **CONN-03**: Red string lines update their endpoints in real time as connected cards are dragged to new positions
 - [ ] **CONN-04**: Red string lines display as curved (quadratic bezier sag) to simulate a string drooping under gravity
 
-### Expanded View
+### Expanded View (Refactored)
 
-- [ ] **EXPV-01**: Clicking (not dragging) an evidence card opens a fullscreen expanded view (native `<dialog>`) showing the card's title and details; Escape key and a close button both dismiss it
+- [ ] **EXPV-02**: Clicking an evidence card triggers an animated zoom to position the card in the left-center of the viewport
+- [ ] **EXPV-03**: During zoom, the rest of the board is dimmed/de-emphasized via a backdrop overlay
+- [ ] **EXPV-04**: A "desk" side panel slides in from the right containing drawing tools, title editing, and notes
+- [ ] **EXPV-05**: Clicking the dimmed backdrop or an 'un-zoom' button returns the board to its previous pan/zoom state
+- [ ] **ANNO-07**: Drawing occurs directly on the card's high-resolution canvas while zoomed in, eliminating the need for a separate dialog canvas
 
-## v2 Requirements
+## v4 Requirements (Advanced Feel)
+... (existing v3)
 
 ### Annotation
 
