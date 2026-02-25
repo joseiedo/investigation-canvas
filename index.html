@@ -44,7 +44,8 @@
     
     .card-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 25; width: 100%; height: 100%; }
     .card img { width: 100%; height: auto; border: 1px solid #2a1f14; filter: sepia(0.3); pointer-events: none; -webkit-user-drag: none; }
-    .card-text { font-family: 'Courier New', monospace; font-size: 11px; font-style: italic; pointer-events: none; }
+    .card-text { font-family: 'Courier New', monospace; font-size: 11px; font-style: italic; pointer-events: auto; user-select: none; }
+    .card.focused .card-text { user-select: text; }
     .card-title { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; text-transform: uppercase; pointer-events: none; }
 
     .card::before {
@@ -214,6 +215,8 @@
       document.querySelectorAll('.card').forEach(card => {
         const idx = card.dataset.index;
         const canvas = card.querySelector('.card-canvas');
+        const txt = card.querySelector('.card-text');
+        
         // High-res canvas (5x resolution for 160x100 visual size)
         canvas.width = 800; canvas.height = 500;
         if (cardPositions[idx]) {
@@ -224,7 +227,6 @@
         }
         if (cardTitles[idx]) card.querySelector('.card-title').textContent = cardTitles[idx];
         if (cardHighlights[idx]) {
-          const txt = card.querySelector('.card-text');
           if (txt) txt.innerHTML = cardHighlights[idx];
         }
         if (cardData[idx]) {
@@ -233,6 +235,35 @@
           img.src = cardData[idx];
         }
         card.addEventListener('mousedown', handleCardMouseDown);
+
+        if (txt) {
+          txt.addEventListener('mouseup', (e) => {
+            if (currentTool !== 'highlighter' || currentCardIndex === null || currentCardIndex !== idx) return;
+            const selection = window.getSelection();
+            if (!selection.rangeCount || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            if (!txt.contains(range.commonAncestorContainer)) return;
+
+            const span = document.createElement('span');
+            span.className = 'highlight';
+            try {
+              const contents = range.extractContents();
+              span.appendChild(contents);
+              range.insertNode(span);
+              updateHighlights(idx, txt.innerHTML);
+              selection.removeAllRanges();
+            } catch (err) { console.error(err); }
+          });
+
+          txt.addEventListener('click', (e) => {
+            if (currentTool !== 'eraser' || currentCardIndex === null || currentCardIndex !== idx) return;
+            if (e.target.classList.contains('highlight')) {
+              const span = e.target;
+              span.replaceWith(...span.childNodes);
+              updateHighlights(idx, txt.innerHTML);
+            }
+          });
+        }
       });
       const seen = new Set();
       cardConnections.forEach(d => {
@@ -245,9 +276,10 @@
       });
     }
 
-    // Highlighting & Erasing Text Logic (Placeholder for Refactor)
-    function updateHighlights() {
-      // To be refactored in next step
+    // Highlighting & Erasing Text Logic
+    function updateHighlights(idx, html) {
+      cardHighlights[idx] = html;
+      save();
     }
 
     // Navigation
@@ -312,6 +344,7 @@
     function handleCardMouseDown(e) {
       const card = e.currentTarget; 
       if (currentCardIndex !== null) {
+        e.stopPropagation(); // Prevent board pan/zoom when a card is open
         if (card.dataset.index === currentCardIndex && currentTool !== 'highlighter') {
           isDrawing = true;
           const canvas = card.querySelector('.card-canvas');
@@ -422,13 +455,15 @@
                         setHighlightTool();
                       }
                       
-                      deskPanel.classList.add('active');
-                      focusBackdrop.classList.add('active');
-                
-                      // Boost z-index to stay above backdrop
-                      card.style.zIndex = 1000;
-                
-                      // Make text cards straight
+                            deskPanel.classList.add('active');
+                            focusBackdrop.classList.add('active');
+                      
+                            // Boost z-index to stay above backdrop and enable text selection
+                            card.style.zIndex = 1000;
+                            card.classList.add('focused');
+                      
+                            // Make text cards straight
+                      
                       if (!img) card.style.transform = "rotate(0deg)";
                 
                       // Calculate target zoom to fill left-center
@@ -455,15 +490,15 @@
                       deskPanel.classList.remove('active');
                       focusBackdrop.classList.remove('active');
                       
-                      // Restore z-index and rotation
-                      if (card) {
-                        if (cardPositions[card.dataset.index]) {
-                          card.style.zIndex = cardPositions[card.dataset.index].zIndex;
-                        }
-                        card.style.transform = originalRotation;
-                      }
-                
-                      animateZoom(originalNav.panX, originalNav.panY, originalNav.zoom);
+                            // Restore z-index and rotation
+                            if (card) {
+                              card.classList.remove('focused');
+                              if (cardPositions[card.dataset.index]) {
+                                card.style.zIndex = cardPositions[card.dataset.index].zIndex;
+                              }
+                              card.style.transform = originalRotation;
+                            }
+                                            animateZoom(originalNav.panX, originalNav.panY, originalNav.zoom);
                     }
                                 toggleBtn.addEventListener('click', () => {
           isConnectMode = !isConnectMode; toggleBtn.classList.toggle('active', isConnectMode); board.classList.toggle('connect-mode', isConnectMode);
