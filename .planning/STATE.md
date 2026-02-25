@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 7 of 7 (Full Persistence)
-Plan: 2 of 2 in current phase
-Status: v2 Delivered
-Last activity: 2026-02-24 — Milestone v2 completed; all interactive features and persistence verified.
+Phase: 9 of 10 (Investigation Management)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-24 — Phase 8 completed; pan/zoom and linking fixes verified.
 
-Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
+Progress: [▓▓▓▓▓▓▓▓░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: —
 - Total execution time: —
 

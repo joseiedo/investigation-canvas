@@ -5,712 +5,417 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Investigation Canvas</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-    }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 100%; height: 100vh; overflow: hidden; background: #1a1a1a; }
+    
     #board {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
+      position: relative; width: 100%; height: 100vh; overflow: hidden;
       background-color: #2a1f14;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
       background-size: 200px 200px;
     }
 
     #board::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        circle at center,
-        transparent 40%,
-        rgba(0, 0, 0, 0.65) 120%
-      );
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.65) 120%);
+      pointer-events: none; z-index: 10;
+    }
+
+    #world {
+      position: absolute; inset: 0; transform-origin: 0 0;
       pointer-events: none;
-      z-index: 10;
     }
 
-    #toggle-connect {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 100;
-      padding: 10px 16px;
-      background: #922b21;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      transition: background 0.2s;
-    }
-
-    #toggle-connect.active {
-      background: #e74c3c;
-      box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
-    }
+    #world > * { pointer-events: auto; }
 
     #connections-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 15;
-    }
-
-    #board.connect-mode .card {
-      cursor: crosshair !important;
-    }
-
-    .card-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 25;
-    }
-
-    #drawing-toolbar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    #drawing-toolbar button {
-      padding: 5px 10px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      background: #eee;
-      border: 1px solid #ccc;
-    }
-
-    #drawing-toolbar button.active {
-      background: #922b21;
-      color: white;
-      border-color: #922b21;
-    }
-
-    #expanded-canvas-container {
-      position: relative;
-      margin-bottom: 20px;
-      width: 100%;
-      aspect-ratio: 1.6;
-      border: 1px solid #2a1f14;
-      background: #fdf6e3;
-      overflow: hidden;
-    }
-
-    #expanded-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      cursor: crosshair;
-      z-index: 30;
-    }
-
-    #dialog-image, #dialog-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-      margin: 0 !important;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    dialog {
-      padding: 40px;
-      border: none;
-      border-radius: 8px;
-      background: #fdf6e3;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      max-width: 600px;
-      width: 95%;
-      font-family: 'Courier New', Courier, monospace;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      margin: 0;
-    }
-
-    dialog::backdrop {
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(4px);
-    }
-
-    #close-dialog {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #922b21;
-    }
-
-    .dialog-content h1 {
-      text-transform: uppercase;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #2a1f14;
-      padding-bottom: 10px;
-    }
-
-    #notes-container {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #notes-container label {
-      font-size: 10px;
-      font-weight: bold;
-      color: #666;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    #card-note {
-      width: 100%;
-      height: 120px;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.3);
-      border: 1px dashed #ccc;
-      border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 14px;
-      line-height: 1.5;
-      color: #2a1f14;
-      resize: vertical;
-      outline: none;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    #card-note:focus {
-      border-color: #922b21;
-      background: rgba(255, 255, 255, 0.5);
-    }
-
-    #reset-board {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      padding: 8px 12px;
-      background: rgba(0, 0, 0, 0.5);
-      color: #ccc;
-      border: 1px solid #444;
-      border-radius: 4px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 10px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    #reset-board:hover {
-      background: #922b21;
-      color: white;
-      border-color: #922b21;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 15;
     }
 
     .card {
-      position: absolute;
-      width: 160px;
-      min-height: 100px;
-      background: #fdf6e3;
-      border-radius: 2px;
-      padding: 28px 12px 12px;
-      box-shadow:
-        2px 4px 4px rgba(0, 0, 0, 0.35),
-        4px 8px 10px rgba(0, 0, 0, 0.25),
-        8px 16px 20px rgba(0, 0, 0, 0.18),
-        12px 28px 36px rgba(0, 0, 0, 0.10);
-      z-index: 20;
-      cursor: grab;
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
+      position: absolute; width: 160px; min-height: 100px; background: #fdf6e3;
+      border-radius: 2px; padding: 28px 12px 12px; z-index: 20; cursor: grab; user-select: none;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.35), 4px 8px 10px rgba(0, 0, 0, 0.25);
     }
 
-    .card img {
-      width: 100%;
-      height: auto;
-      border: 1px solid #2a1f14;
-      filter: sepia(0.3) contrast(1.1) brightness(0.9);
-      display: block;
-    }
-
-    .card-text {
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      color: #333;
-      line-height: 1.3;
-      margin-top: 5px;
-      text-align: left;
-      font-style: italic;
-    }
-
-    .card.dragging {
-      cursor: grabbing;
-      z-index: 1000;
-      box-shadow:
-        4px 8px 12px rgba(0, 0, 0, 0.4),
-        8px 16px 20px rgba(0, 0, 0, 0.3),
-        16px 32px 40px rgba(0, 0, 0, 0.2),
-        24px 56px 72px rgba(0, 0, 0, 0.15);
-      transition: none;
-    }
+    .card.dragging { cursor: grabbing; z-index: 1000 !important; }
+    
+    .card-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 25; }
+    .card img { width: 100%; height: auto; border: 1px solid #2a1f14; filter: sepia(0.3); }
+    .card-text { font-family: 'Courier New', monospace; font-size: 11px; font-style: italic; }
+    .card-title { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; text-transform: uppercase; }
 
     .card::before {
-      content: "";
-      position: absolute;
-      top: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
+      content: ""; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+      width: 16px; height: 16px; border-radius: 50%; z-index: 21;
       background: radial-gradient(circle at 35% 35%, #e74c3c, #922b21);
-      box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.5),
-        inset 0 1px 2px rgba(255, 255, 255, 0.25);
-      z-index: 21;
     }
 
-    .card-title {
-      display: block;
-      text-align: center;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 13px;
-      font-weight: bold;
-      color: #1a1a1a;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    #toggle-connect, #reset-board {
+      position: absolute; z-index: 100; padding: 10px 16px;
+      font-family: 'Courier New', monospace; font-weight: bold; cursor: pointer;
+      border: none; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
+    #toggle-connect { top: 20px; left: 20px; background: #922b21; color: white; }
+    #toggle-connect.active { background: #e74c3c; box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
+    #reset-board { bottom: 20px; right: 20px; background: rgba(0,0,0,0.5); color: #ccc; font-size: 10px; }
+
+    dialog {
+      padding: 40px; border: none; border-radius: 8px; background: #fdf6e3;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 600px; width: 95%;
+      font-family: 'Courier New', monospace; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
+    #close-dialog { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #922b21; }
+    #drawing-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
+    #drawing-toolbar button { padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; }
+    #drawing-toolbar button.active { background: #922b21; color: white; border-color: #922b21; }
+    #card-note { width: 100%; height: 100px; margin-top: 10px; font-family: inherit; padding: 10px; }
+    #expanded-canvas-container { position: relative; margin-bottom: 20px; width: 100%; aspect-ratio: 1.6; border: 1px solid #2a1f14; background: #fdf6e3; overflow: hidden; }
+    #expanded-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; z-index: 30; }
+    #dialog-image, #dialog-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-height: 90%; object-fit: contain; pointer-events: none; z-index: 10; }
   </style>
 </head>
 <body>
   <div id="board">
     <button id="toggle-connect">Connect Mode: OFF</button>
     <button id="reset-board">Reset Board</button>
-    <svg id="connections-layer"></svg>
+    
+    <div id="world">
+      <svg id="connections-layer" width="5000" height="5000"></svg>
+      
+      <div class="card" style="top: 12%; left: 8%; transform: rotate(-3deg)" data-index="0">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Suspect A</span>
+        <img src="https://i.pinimg.com/736x/a4/90/c1/a490c10e7e2c54b2ea2a8e0dfdbc1f3a.jpg">
+      </div>
+      
+      <div class="card" style="top: 55%; left: 18%; transform: rotate(2deg)" data-index="1">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Victim</span>
+        <img src="https://i.pinimg.com/736x/e6/c9/be/e6c9bebea93ea6662f0f5647fad5952a.jpg">
+      </div>
+      
+      <div class="card" style="top: 20%; left: 42%; transform: rotate(-1deg)" data-index="2">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Crime Scene</span>
+        <img src="https://townsquare.media/site/704/files/2025/01/attachment-october-2023-october-2024-2025-01-22T160209.904.jpg?w=780&q=75">
+      </div>
+      
+      <div class="card" style="top: 58%; left: 60%; transform: rotate(4deg)" data-index="3">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Alibi</span>
+        <p class="card-text">"I was at the Blue Velvet Lounge from 9 PM until closing..."</p>
+      </div>
+      
+      <div class="card" style="top: 15%; left: 74%; transform: rotate(-2deg)" data-index="4">
+        <canvas class="card-canvas"></canvas>
+        <span class="card-title">Witness</span>
+        <img src="https://yt3.googleusercontent.com/t_gDv96OAt41Y6IkBCjJWmGCHYzH9vuwzGuHFWnyoXHZnB53P5ULlGEAHIeYxSSlNgp_vDMwQf8=s900-c-k-c0x00ffffff-no-rj">
+      </div>
+    </div>
+
     <dialog id="card-detail">
       <button id="close-dialog">&times;</button>
       <div id="drawing-toolbar">
-        <button id="tool-pen" class="active">Marker (Red)</button>
+        <button id="tool-pen" class="active">Marker</button>
         <button id="tool-eraser">Eraser</button>
       </div>
       <div id="expanded-canvas-container">
-        <img id="dialog-image" src="" alt="Evidence portrait">
+        <img id="dialog-image" src="">
         <p id="dialog-text"></p>
         <canvas id="expanded-canvas"></canvas>
       </div>
-      <div class="dialog-content">
-        <h1 id="dialog-title"></h1>
-        <div id="notes-container">
-          <label for="card-note">Investigative Notes:</label>
-          <textarea id="card-note" placeholder="Record your observations..."></textarea>
-        </div>
-        <p style="border-top: 1px solid #ccc; padding-top: 10px; font-size: 12px; color: #666; margin-top: 20px;">Investigation Evidence</p>
-      </div>
+      <h1 id="dialog-title"></h1>
+      <textarea id="card-note" placeholder="Notes..."></textarea>
     </dialog>
-    <div class="card" style="top: 12%; left: 8%; transform: rotate(-3deg)" data-index="0">
-      <canvas class="card-canvas"></canvas>
-      <span class="card-title">Suspect A</span>
-      <img src="https://i.pinimg.com/736x/a4/90/c1/a490c10e7e2c54b2ea2a8e0dfdbc1f3a.jpg" alt="Suspect portrait">
-    </div>
-    <div class="card" style="top: 55%; left: 18%; transform: rotate(2deg)" data-index="1">
-      <canvas class="card-canvas"></canvas>
-      <span class="card-title">Victim</span>
-      <img src="https://i.pinimg.com/736x/e6/c9/be/e6c9bebea93ea6662f0f5647fad5952a.jpg" alt="Victim portrait">
-    </div>
-    <div class="card" style="top: 20%; left: 42%; transform: rotate(-1deg)" data-index="2">
-      <canvas class="card-canvas"></canvas>
-      <span class="card-title">Crime Scene</span>
-      <img src="https://townsquare.media/site/704/files/2025/01/attachment-october-2023-october-2024-2025-01-22T160209.904.jpg?w=780&q=75" alt="Crime scene photo">
-    </div>
-    <div class="card" style="top: 58%; left: 60%; transform: rotate(4deg)" data-index="3">
-      <canvas class="card-canvas"></canvas>
-      <span class="card-title">Alibi</span>
-      <p class="card-text">"I was at the Blue Velvet Lounge from 9 PM until closing. Ask the bartender, Sal — he'll remember me; I spilled a gin and tonic on my favorite silk tie."</p>
-    </div>
-    <div class="card" style="top: 15%; left: 74%; transform: rotate(-2deg)" data-index="4">
-      <canvas class="card-canvas"></canvas>
-      <span class="card-title">Witness</span>
-      <img src="https://yt3.googleusercontent.com/t_gDv96OAt41Y6IkBCjJWmGCHYzH9vuwzGuHFWnyoXHZnB53P5ULlGEAHIeYxSSlNgp_vDMwQf8=s900-c-k-c0x00ffffff-no-rj" alt="Witness portrait">
-    </div>
   </div>
 
   <script>
-    let activeCard = null;
-    let offset = { x: 0, y: 0 };
-    let startPos = { x: 0, y: 0 };
-    let isActuallyDragging = false;
-    let highestZ = 100;
+    // State
+    let panX = 0, panY = 0, zoom = 1;
+    let isPanning = false, lastPanPos = {x:0, y:0};
+    let activeCard = null, offset = {x:0, y:0}, startPos = {x:0, y:0}, isActuallyDragging = false, highestZ = 100;
+    let isConnectMode = false, firstSelectedCard = null, connections = [];
+    let currentTool = 'pen', currentCardIndex = null, isDrawing = false;
 
-    let isConnectMode = false;
-    let firstSelectedCard = null;
-    const connections = [];
-
-    const toggleBtn = document.getElementById('toggle-connect');
+    // Elements
     const board = document.getElementById('board');
+    const world = document.getElementById('world');
     const svgLayer = document.getElementById('connections-layer');
     const dialog = document.getElementById('card-detail');
-    const dialogTitle = document.getElementById('dialog-title');
-    const closeDialogBtn = document.getElementById('close-dialog');
-    const cardNoteTextarea = document.getElementById('card-note');
-    const resetBtn = document.getElementById('reset-board');
-
-    // Drawing State
     const expandedCanvas = document.getElementById('expanded-canvas');
     const expCtx = expandedCanvas.getContext('2d');
-    let isDrawingOnCanvas = false;
-    let currentTool = 'pen';
-    let currentCardIndex = null;
-    
-    // Persistence: Load all state from localStorage
+    const toggleBtn = document.getElementById('toggle-connect');
+    const cardNoteTextarea = document.getElementById('card-note');
+
+    // Persistence
     let cardData = JSON.parse(localStorage.getItem('investigation_drawings') || '{}');
     let cardNotes = JSON.parse(localStorage.getItem('investigation_notes') || '{}');
     let cardPositions = JSON.parse(localStorage.getItem('investigation_positions') || '{}');
     let cardConnections = JSON.parse(localStorage.getItem('investigation_connections') || '[]');
+    let navState = JSON.parse(localStorage.getItem('investigation_nav') || '{"panX":0, "panY":0, "zoom":1}');
+    panX = navState.panX; panY = navState.panY; zoom = navState.zoom;
 
-    function saveToStorage() {
+    function save() {
       localStorage.setItem('investigation_drawings', JSON.stringify(cardData));
       localStorage.setItem('investigation_notes', JSON.stringify(cardNotes));
       localStorage.setItem('investigation_positions', JSON.stringify(cardPositions));
-      localStorage.setItem('investigation_connections', JSON.stringify(
-        connections.map(c => ({ fromIdx: c.from.dataset.index, toIdx: c.to.dataset.index }))
-      ));
+      localStorage.setItem('investigation_connections', JSON.stringify(connections.map(c => ({fromIdx: c.from.dataset.index, toIdx: c.to.dataset.index}))));
+      localStorage.setItem('investigation_nav', JSON.stringify({panX, panY, zoom}));
     }
 
-    resetBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset the board? All progress will be lost.')) {
-        localStorage.clear();
-        window.location.reload();
-      }
-    });
+    function updateWorld() {
+      world.style.transform = "translate(" + panX + "px, " + panY + "px) scale(" + zoom + ")";
+    }
 
-    // Note System Logic
-    cardNoteTextarea.addEventListener('input', () => {
-      if (currentCardIndex === null) return;
-      cardNotes[currentCardIndex] = cardNoteTextarea.value;
-      saveToStorage();
-    });
-
-    // Initialize Cards and Restore State
-    function initBoard() {
-      document.querySelectorAll('.card').forEach((card) => {
+    // Initialize
+    function init() {
+      updateWorld();
+      document.querySelectorAll('.card').forEach(card => {
         const idx = card.dataset.index;
         const canvas = card.querySelector('.card-canvas');
-        canvas.width = 160;
-        canvas.height = 100;
+        canvas.width = 160; canvas.height = 100;
         
-        // Restore Position
         if (cardPositions[idx]) {
           card.style.left = cardPositions[idx].left;
           card.style.top = cardPositions[idx].top;
           card.style.zIndex = cardPositions[idx].zIndex || 20;
-          highestZ = Math.max(highestZ, cardPositions[idx].zIndex || 20);
+          highestZ = Math.max(highestZ, parseInt(cardPositions[idx].zIndex) || 20);
         }
 
-        // Restore board drawing if exists
         if (cardData[idx]) {
           const img = new Image();
-          img.onload = () => {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          };
+          img.onload = () => canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           img.src = cardData[idx];
         }
+
+        // Card events
+        card.addEventListener('mousedown', handleCardMouseDown);
       });
 
-      // Restore Connections (must happen after positions are set)
-      cardConnections.forEach(data => {
-        const from = document.querySelector(`.card[data-index="${data.fromIdx}"]`);
-        const to = document.querySelector(`.card[data-index="${data.toIdx}"]`);
-        if (from && to) createConnection(from, to);
+      // Use a Set to track unique pairs (e.g., "0-1")
+      const seen = new Set();
+      cardConnections.forEach(d => {
+        const pair = [d.fromIdx, d.toIdx].sort().join('-');
+        if (seen.has(pair)) return;
+        seen.add(pair);
+
+        const f = document.querySelector(".card[data-index='" + d.fromIdx + "']");
+        const t = document.querySelector(".card[data-index='" + d.toIdx + "']");
+        if (f && t) createConnection(f, t);
       });
     }
 
-    window.addEventListener('load', initBoard);
+    // Navigation Events
+    board.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = board.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const wx = (mx - panX) / zoom, wy = (my - panY) / zoom;
+      zoom = Math.max(0.1, Math.min(5, zoom + (-e.deltaY * 0.001)));
+      panX = mx - wx * zoom; panY = my - wy * zoom;
+      updateWorld(); save();
+    }, { passive: false });
 
-    // Toolbar Logic
-    document.getElementById('tool-pen').addEventListener('click', (e) => {
+    board.addEventListener('mousedown', (e) => {
+      if (e.target === board || e.target === svgLayer) {
+        isPanning = true;
+        lastPanPos = {x:e.clientX, y:e.clientY};
+        board.style.cursor = 'grabbing';
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        panX += e.clientX - lastPanPos.x;
+        panY += e.clientY - lastPanPos.y;
+        lastPanPos = {x:e.clientX, y:e.clientY};
+        updateWorld();
+      }
+      if (isDrawing) {
+        const r = expandedCanvas.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        expCtx.lineWidth = currentTool === 'pen' ? 4 : 15;
+        expCtx.lineCap = 'round';
+        expCtx.globalCompositeOperation = currentTool === 'pen' ? 'source-over' : 'destination-out';
+        expCtx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
+        expCtx.lineTo(x, y); expCtx.stroke();
+        mirror();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isPanning) { isPanning = false; board.style.cursor = 'auto'; save(); }
+      if (isDrawing) { isDrawing = false; cardData[currentCardIndex] = expandedCanvas.toDataURL(); save(); }
+    });
+
+    // Card Interaction
+    function handleCardMouseDown(e) {
+      const card = e.currentTarget;
+      e.stopPropagation();
+
+      if (isConnectMode) {
+        if (!firstSelectedCard) {
+          firstSelectedCard = card;
+          card.style.outline = '3px solid #e74c3c';
+        } else {
+          if (firstSelectedCard !== card && !connectionExists(firstSelectedCard, card)) {
+            createConnection(firstSelectedCard, card);
+            save();
+          }
+          firstSelectedCard.style.outline = '';
+          firstSelectedCard = null;
+        }
+        return;
+      }
+
+      activeCard = card;
+      isActuallyDragging = false;
+      startPos = {x:e.clientX, y:e.clientY};
+      highestZ++;
+      card.style.zIndex = highestZ;
+      card.classList.add('dragging');
+      
+      const r = card.getBoundingClientRect();
+      offset = {x: (e.clientX - r.left)/zoom, y: (e.clientY - r.top)/zoom};
+
+      const onMove = (me) => {
+        if (!activeCard) return;
+        if (Math.hypot(me.clientX - startPos.x, me.clientY - startPos.y) > 5) isActuallyDragging = true;
+        const br = board.getBoundingClientRect();
+        activeCard.style.left = (me.clientX - br.left - panX)/zoom - offset.x + 'px';
+        activeCard.style.top = (me.clientY - br.top - panY)/zoom - offset.y + 'px';
+        connections.forEach(updatePath);
+      };
+
+      const onUp = () => {
+        if (activeCard) {
+          activeCard.classList.remove('dragging');
+          cardPositions[activeCard.dataset.index] = {left: activeCard.style.left, top: activeCard.style.top, zIndex: activeCard.style.zIndex};
+          save();
+          if (!isActuallyDragging) openCard(activeCard);
+          activeCard = null;
+        }
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    }
+
+    function connectionExists(f, t) {
+      return connections.some(c => 
+        (c.from === f && c.to === t) || (c.from === t && c.to === f)
+      );
+    }
+
+    // Linking
+    function createConnection(f, t) {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('stroke', '#e74c3c');
+      p.setAttribute('stroke-width', '3');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('style', 'filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5))');
+      svgLayer.appendChild(p);
+      const c = {from: f, to: t, path: p};
+      connections.push(c);
+      updatePath(c);
+    }
+
+    function updatePath(c) {
+      const x1 = c.from.offsetLeft + c.from.offsetWidth/2;
+      const y1 = c.from.offsetTop + c.from.offsetHeight/2;
+      const x2 = c.to.offsetLeft + c.to.offsetWidth/2;
+      const y2 = c.to.offsetTop + c.to.offsetHeight/2;
+      c.path.setAttribute('d', "M " + x1 + " " + y1 + " Q " + (x1+x2)/2 + " " + ((y1+y2)/2 + 40) + " " + x2 + " " + y2);
+    }
+
+    // Expanded View
+    function openCard(card) {
+      currentCardIndex = card.dataset.index;
+      const img = card.querySelector('img'), txt = card.querySelector('.card-text');
+      const dImg = document.getElementById('dialog-image'), dTxt = document.getElementById('dialog-text');
+      
+      document.getElementById('dialog-title').textContent = card.querySelector('.card-title').textContent;
+      cardNoteTextarea.value = cardNotes[currentCardIndex] || '';
+      
+      dImg.style.display = img ? 'block' : 'none'; if(img) dImg.src = img.src;
+      dTxt.style.display = txt ? 'block' : 'none'; if(txt) dTxt.textContent = txt.textContent;
+      
+      dialog.showModal();
+      
+      setTimeout(() => {
+        const r = expandedCanvas.parentNode.getBoundingClientRect();
+        expandedCanvas.width = r.width; expandedCanvas.height = r.height;
+        expCtx.clearRect(0, 0, expandedCanvas.width, expandedCanvas.height);
+        if (cardData[currentCardIndex]) {
+          const i = new Image();
+          i.onload = () => expCtx.drawImage(i, 0, 0);
+          i.src = cardData[currentCardIndex];
+        }
+      }, 50);
+    }
+
+    function mirror() {
+      if (currentCardIndex === null) return;
+      const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+      const canvas = card.querySelector('.card-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(expandedCanvas, 0, 0, canvas.width, canvas.height);
+    }
+
+    // UI Events
+    toggleBtn.addEventListener('click', () => {
+      isConnectMode = !isConnectMode;
+      toggleBtn.classList.toggle('active', isConnectMode);
+      board.classList.toggle('connect-mode', isConnectMode);
+      toggleBtn.textContent = "Connect Mode: " + (isConnectMode ? 'ON' : 'OFF');
+      if (!isConnectMode) {
+        if (firstSelectedCard) firstSelectedCard.style.outline = '';
+        firstSelectedCard = null;
+      }
+    });
+
+    document.getElementById('reset-board').addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset?')) {
+        localStorage.clear(); location.reload();
+      }
+    });
+
+    document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
+    
+    cardNoteTextarea.addEventListener('input', () => {
+      if (currentCardIndex !== null) {
+        cardNotes[currentCardIndex] = cardNoteTextarea.value;
+        save();
+      }
+    });
+
+    expandedCanvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      expCtx.beginPath();
+      const r = expandedCanvas.getBoundingClientRect();
+      expCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
+    });
+
+    // Drawing toolbar
+    document.getElementById('tool-pen').addEventListener('click', () => {
       currentTool = 'pen';
       document.getElementById('tool-pen').classList.add('active');
       document.getElementById('tool-eraser').classList.remove('active');
     });
-    document.getElementById('tool-eraser').addEventListener('click', (e) => {
+    document.getElementById('tool-eraser').addEventListener('click', () => {
       currentTool = 'eraser';
       document.getElementById('tool-eraser').classList.add('active');
       document.getElementById('tool-pen').classList.remove('active');
     });
 
-    // Drawing Event Handlers
-    expandedCanvas.addEventListener('mousedown', startDrawing);
-    window.addEventListener('mousemove', draw);
-    window.addEventListener('mouseup', stopDrawing);
-
-    function startDrawing(e) {
-      if (e.target !== expandedCanvas) return;
-      isDrawingOnCanvas = true;
-      
-      const rect = expandedCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      
-      expCtx.beginPath();
-      expCtx.moveTo(x, y);
-    }
-
-    function draw(e) {
-      if (!isDrawingOnCanvas) return;
-      
-      const rect = expandedCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      expCtx.lineWidth = 4;
-      expCtx.lineCap = 'round';
-      expCtx.lineJoin = 'round';
-
-      if (currentTool === 'pen') {
-        expCtx.globalCompositeOperation = 'source-over';
-        expCtx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
-      } else {
-        expCtx.globalCompositeOperation = 'destination-out';
-        expCtx.lineWidth = 15;
-      }
-
-      expCtx.lineTo(x, y);
-      expCtx.stroke();
-      
-      mirrorToBoard();
-    }
-
-    function stopDrawing() {
-      if (isDrawingOnCanvas) {
-        expCtx.closePath();
-        isDrawingOnCanvas = false;
-        // Persistence: Save snapshot to memory and localStorage
-        cardData[currentCardIndex] = expandedCanvas.toDataURL();
-        saveToStorage();
-      }
-    }
-
-    function mirrorToBoard() {
-      if (currentCardIndex === null) return;
-      const card = document.querySelector(`.card[data-index="${currentCardIndex}"]`);
-      const cardCanvas = card.querySelector('.card-canvas');
-      const ctx = cardCanvas.getContext('2d');
-      
-      ctx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
-      ctx.drawImage(expandedCanvas, 0, 0, cardCanvas.width, cardCanvas.height);
-    }
-
-    toggleBtn.addEventListener('click', () => {
-      isConnectMode = !isConnectMode;
-      toggleBtn.classList.toggle('active', isConnectMode);
-      board.classList.toggle('connect-mode', isConnectMode);
-      toggleBtn.textContent = `Connect Mode: ${isConnectMode ? 'ON' : 'OFF'}`;
-      
-      if (!isConnectMode) {
-        if (firstSelectedCard) firstSelectedCard.style.outline = 'none';
-        firstSelectedCard = null;
-      }
-    });
-
-    closeDialogBtn.addEventListener('click', () => dialog.close());
-
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('mousedown', (e) => {
-        if (isConnectMode) {
-          handleConnectClick(card);
-          return;
-        }
-
-        activeCard = card;
-        isActuallyDragging = false;
-        startPos.x = e.clientX;
-        startPos.y = e.clientY;
-        
-        highestZ++;
-        card.style.zIndex = highestZ;
-        card.classList.add('dragging');
-        
-        const rect = card.getBoundingClientRect();
-        offset.x = e.clientX - rect.left;
-        offset.y = e.clientY - rect.top;
-        
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
-      });
-    });
-
-    function handleConnectClick(card) {
-      if (!firstSelectedCard) {
-        firstSelectedCard = card;
-        card.style.outline = '3px solid #e74c3c';
-      } else {
-        if (firstSelectedCard !== card) {
-          createConnection(firstSelectedCard, card);
-          saveToStorage();
-        }
-        firstSelectedCard.style.outline = 'none';
-        firstSelectedCard = null;
-      }
-    }
-
-    function createConnection(from, to) {
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('stroke', '#e74c3c');
-      path.setAttribute('stroke-width', '3');
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke-linecap', 'round');
-      path.setAttribute('style', 'filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5))');
-      
-      svgLayer.appendChild(path);
-      const conn = { from, to, path };
-      connections.push(conn);
-      updatePath(conn);
-    }
-
-    function updatePath(conn) {
-      const fromRect = conn.from.getBoundingClientRect();
-      const toRect = conn.to.getBoundingClientRect();
-      const boardRect = board.getBoundingClientRect();
-
-      const x1 = fromRect.left - boardRect.left + fromRect.width / 2;
-      const y1 = fromRect.top - boardRect.top + fromRect.height / 2;
-      const x2 = toRect.left - boardRect.left + toRect.width / 2;
-      const y2 = toRect.top - boardRect.top + toRect.height / 2;
-
-      const midX = (x1 + x2) / 2;
-      const midY = (y1 + y2) / 2 + 40;
-
-      conn.path.setAttribute('d', `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`);
-    }
-
-    function onMouseMove(e) {
-      if (!activeCard) return;
-      
-      e.preventDefault();
-
-      const dist = Math.hypot(e.clientX - startPos.x, e.clientY - startPos.y);
-      if (dist > 5) isActuallyDragging = true;
-      
-      const boardRect = board.getBoundingClientRect();
-      
-      let x = e.clientX - boardRect.left - offset.x;
-      let y = e.clientY - boardRect.top - offset.y;
-      
-      const maxX = boardRect.width - activeCard.offsetWidth;
-      const maxY = boardRect.height - activeCard.offsetHeight;
-      
-      x = Math.max(0, Math.min(x, maxX));
-      y = Math.max(0, Math.min(y, maxY));
-      
-      activeCard.style.left = x + 'px';
-      activeCard.style.top = y + 'px';
-
-      connections.forEach(conn => {
-        if (conn.from === activeCard || conn.to === activeCard) {
-          updatePath(conn);
-        }
-      });
-    }
-
-    function onMouseUp() {
-      if (activeCard) {
-        activeCard.classList.remove('dragging');
-        // Persistence: Save new position
-        cardPositions[activeCard.dataset.index] = {
-          left: activeCard.style.left,
-          top: activeCard.style.top,
-          zIndex: activeCard.style.zIndex
-        };
-        saveToStorage();
-        if (!isActuallyDragging) {
-          openCard(activeCard);
-        }
-        activeCard = null;
-      }
-      
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    }
-
-    function openCard(card) {
-      const title = card.querySelector('.card-title').textContent;
-      const img = card.querySelector('img');
-      const text = card.querySelector('.card-text');
-      const dialogImg = document.getElementById('dialog-image');
-      const dialogTxt = document.getElementById('dialog-text');
-      
-      currentCardIndex = card.dataset.index;
-      dialogTitle.textContent = title;
-      
-      // Load Note
-      cardNoteTextarea.value = cardNotes[currentCardIndex] || '';
-
-      // Open dialog first to get correct dimensions
-      dialog.showModal();
-
-      // Ensure canvas has correct internal dimensions
-      const rect = expandedCanvas.getBoundingClientRect();
-      expandedCanvas.width = rect.width;
-      expandedCanvas.height = rect.height;
-
-      expCtx.clearRect(0, 0, expandedCanvas.width, expandedCanvas.height);
-      if (cardData[currentCardIndex]) {
-        const image = new Image();
-        image.onload = () => expCtx.drawImage(image, 0, 0);
-        image.src = cardData[currentCardIndex];
-      }
-
-      if (img) {
-        dialogImg.src = img.src;
-        dialogImg.style.display = 'block';
-      } else {
-        dialogImg.style.display = 'none';
-      }
-
-      if (text) {
-        dialogTxt.textContent = text.textContent;
-        dialogTxt.style.display = 'block';
-      } else {
-        dialogTxt.style.display = 'none';
-      }
-    }
+    init();
   </script>
 </body>
 </html>

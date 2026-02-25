@@ -44,6 +44,25 @@ Requirements for the initial PoC release.
 - [ ] **PERS-03**: Drawings and text notes persist in localStorage
 - [ ] **PERS-04**: A "Reset Board" button exists to clear all local data and return to defaults
 
+## v3 Requirements
+
+### Board & Navigation
+
+- [ ] **BOARD-03**: User can pan and zoom the board to navigate a space larger than the viewport
+- [ ] **CARD-03**: User can rename any evidence card from the expanded view
+
+### Management
+
+- [ ] **CONN-05**: User can delete an existing connection (e.g., right-click or delete button)
+
+### Advanced Markup
+
+- [ ] **ANNO-04**: Drawing toolbar includes multiple colors (Red, Blue, Black)
+- [ ] **ANNO-05**: Contextual markup behavior:
+    - **Image Evidence**: Drawing canvas enabled (Marker/Eraser)
+    - **Text Evidence**: Drawing disabled; text selection highlighting enabled (Yellow highlighter)
+- [ ] **ANNO-06**: Text highlights are persistent in localStorage and mirrored to the board card
+
 ## Out of Scope
 
 Explicitly excluded from the PoC. Documented to prevent scope creep.
@@ -82,6 +101,12 @@ Explicitly excluded from the PoC. Documented to prevent scope creep.
 | PERS-02 | Phase 7 | DONE |
 | PERS-03 | Phase 7 | DONE |
 | PERS-04 | Phase 7 | DONE |
+| BOARD-03 | Phase 8 | DONE |
+| CARD-03 | Phase 9 | Pending |
+| CONN-05 | Phase 9 | Pending |
+| ANNO-04 | Phase 10 | Pending |
+| ANNO-05 | Phase 10 | Pending |
+| ANNO-06 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 10 total
