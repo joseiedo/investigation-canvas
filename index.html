@@ -70,9 +70,29 @@
     dialog::backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
     #close-dialog { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #922b21; }
     #drawing-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
-    #drawing-toolbar button { padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; }
+    #drawing-toolbar button { padding: 5px 10px; cursor: pointer; border: 1px solid #ccc; font-family: inherit; font-weight: bold; }
     #drawing-toolbar button.active { background: #922b21; color: white; border-color: #922b21; }
+    
+    .highlight { background-color: #f1c40f; color: #000; }
+    #dialog-text { user-select: text !important; pointer-events: auto !important; z-index: 40 !important; position: relative; }
+
     #card-note { width: 100%; height: 100px; margin-top: 10px; font-family: inherit; padding: 10px; }
+
+    #dialog-title-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #2a1f14;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      outline: none;
+    }
+
     #expanded-canvas-container { position: relative; margin-bottom: 20px; width: 100%; aspect-ratio: 1.6; border: 1px solid #2a1f14; background: #fdf6e3; overflow: hidden; }
     #expanded-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; z-index: 30; }
     #dialog-image, #dialog-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-height: 90%; object-fit: contain; pointer-events: none; z-index: 10; }
@@ -120,15 +140,18 @@
     <dialog id="card-detail">
       <button id="close-dialog">&times;</button>
       <div id="drawing-toolbar">
-        <button id="tool-pen" class="active">Marker</button>
+        <button id="tool-pen-red" class="active" style="color: #e74c3c">Red</button>
+        <button id="tool-pen-blue" style="color: #3498db">Blue</button>
+        <button id="tool-pen-black" style="color: #2c3e50">Black</button>
         <button id="tool-eraser">Eraser</button>
+        <button id="tool-highlight" style="display: none; background: #f1c40f; color: #000;">Highlight</button>
       </div>
       <div id="expanded-canvas-container">
         <img id="dialog-image" src="">
         <p id="dialog-text"></p>
         <canvas id="expanded-canvas"></canvas>
       </div>
-      <h1 id="dialog-title"></h1>
+      <input id="dialog-title-input" type="text" placeholder="Enter Evidence Name...">
       <textarea id="card-note" placeholder="Notes..."></textarea>
     </dialog>
   </div>
@@ -139,7 +162,7 @@
     let isPanning = false, lastPanPos = {x:0, y:0};
     let activeCard = null, offset = {x:0, y:0}, startPos = {x:0, y:0}, isActuallyDragging = false, highestZ = 100;
     let isConnectMode = false, firstSelectedCard = null, connections = [];
-    let currentTool = 'pen', currentCardIndex = null, isDrawing = false;
+    let currentTool = 'pen', currentMarkerColor = 'rgba(231, 76, 60, 0.7)', currentCardIndex = null, isDrawing = false;
 
     // Elements
     const board = document.getElementById('board');
@@ -150,12 +173,18 @@
     const expCtx = expandedCanvas.getContext('2d');
     const toggleBtn = document.getElementById('toggle-connect');
     const cardNoteTextarea = document.getElementById('card-note');
+    const titleInput = document.getElementById('dialog-title-input');
+    const highlightBtn = document.getElementById('tool-highlight');
+    const eraserBtn = document.getElementById('tool-eraser');
+    const dialogTxt = document.getElementById('dialog-text');
 
     // Persistence
     let cardData = JSON.parse(localStorage.getItem('investigation_drawings') || '{}');
     let cardNotes = JSON.parse(localStorage.getItem('investigation_notes') || '{}');
     let cardPositions = JSON.parse(localStorage.getItem('investigation_positions') || '{}');
     let cardConnections = JSON.parse(localStorage.getItem('investigation_connections') || '[]');
+    let cardTitles = JSON.parse(localStorage.getItem('investigation_titles') || '{}');
+    let cardHighlights = JSON.parse(localStorage.getItem('investigation_highlights') || '{}');
     let navState = JSON.parse(localStorage.getItem('investigation_nav') || '{"panX":0, "panY":0, "zoom":1}');
     panX = navState.panX; panY = navState.panY; zoom = navState.zoom;
 
@@ -164,6 +193,8 @@
       localStorage.setItem('investigation_notes', JSON.stringify(cardNotes));
       localStorage.setItem('investigation_positions', JSON.stringify(cardPositions));
       localStorage.setItem('investigation_connections', JSON.stringify(connections.map(c => ({fromIdx: c.from.dataset.index, toIdx: c.to.dataset.index}))));
+      localStorage.setItem('investigation_titles', JSON.stringify(cardTitles));
+      localStorage.setItem('investigation_highlights', JSON.stringify(cardHighlights));
       localStorage.setItem('investigation_nav', JSON.stringify({panX, panY, zoom}));
     }
 
@@ -178,38 +209,72 @@
         const idx = card.dataset.index;
         const canvas = card.querySelector('.card-canvas');
         canvas.width = 160; canvas.height = 100;
-        
         if (cardPositions[idx]) {
           card.style.left = cardPositions[idx].left;
           card.style.top = cardPositions[idx].top;
           card.style.zIndex = cardPositions[idx].zIndex || 20;
           highestZ = Math.max(highestZ, parseInt(cardPositions[idx].zIndex) || 20);
         }
-
+        if (cardTitles[idx]) card.querySelector('.card-title').textContent = cardTitles[idx];
+        if (cardHighlights[idx]) {
+          const txt = card.querySelector('.card-text');
+          if (txt) txt.innerHTML = cardHighlights[idx];
+        }
         if (cardData[idx]) {
           const img = new Image();
           img.onload = () => canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           img.src = cardData[idx];
         }
-
-        // Card events
         card.addEventListener('mousedown', handleCardMouseDown);
       });
-
-      // Use a Set to track unique pairs (e.g., "0-1")
       const seen = new Set();
       cardConnections.forEach(d => {
         const pair = [d.fromIdx, d.toIdx].sort().join('-');
         if (seen.has(pair)) return;
         seen.add(pair);
-
         const f = document.querySelector(".card[data-index='" + d.fromIdx + "']");
         const t = document.querySelector(".card[data-index='" + d.toIdx + "']");
         if (f && t) createConnection(f, t);
       });
     }
 
-    // Navigation Events
+    // Highlighting & Erasing Text Logic
+    dialogTxt.addEventListener('mouseup', () => {
+      if (currentTool !== 'highlighter') return;
+      const selection = window.getSelection();
+      if (!selection.rangeCount || selection.isCollapsed) return;
+      const range = selection.getRangeAt(0);
+      if (!dialogTxt.contains(range.commonAncestorContainer)) return;
+
+      const span = document.createElement('span');
+      span.className = 'highlight';
+      try {
+        const contents = range.extractContents();
+        span.appendChild(contents);
+        range.insertNode(span);
+        updateHighlights();
+        selection.removeAllRanges();
+      } catch (e) { console.error(e); }
+    });
+
+    dialogTxt.addEventListener('click', (e) => {
+      if (currentTool !== 'eraser') return;
+      if (e.target.classList.contains('highlight')) {
+        const span = e.target;
+        span.replaceWith(...span.childNodes);
+        updateHighlights();
+      }
+    });
+
+    function updateHighlights() {
+      cardHighlights[currentCardIndex] = dialogTxt.innerHTML;
+      const boardCard = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+      const boardTxt = boardCard.querySelector('.card-text');
+      if (boardTxt) boardTxt.innerHTML = dialogTxt.innerHTML;
+      save();
+    }
+
+    // Navigation
     board.addEventListener('wheel', (e) => {
       e.preventDefault();
       const rect = board.getBoundingClientRect();
@@ -222,28 +287,30 @@
 
     board.addEventListener('mousedown', (e) => {
       if (e.target === board || e.target === svgLayer) {
-        isPanning = true;
-        lastPanPos = {x:e.clientX, y:e.clientY};
-        board.style.cursor = 'grabbing';
+        isPanning = true; lastPanPos = {x:e.clientX, y:e.clientY}; board.style.cursor = 'grabbing';
       }
     });
 
     window.addEventListener('mousemove', (e) => {
       if (isPanning) {
-        panX += e.clientX - lastPanPos.x;
-        panY += e.clientY - lastPanPos.y;
-        lastPanPos = {x:e.clientX, y:e.clientY};
-        updateWorld();
+        panX += e.clientX - lastPanPos.x; panY += e.clientY - lastPanPos.y;
+        lastPanPos = {x:e.clientX, y:e.clientY}; updateWorld();
       }
-      if (isDrawing) {
+      if (isDrawing && currentTool !== 'highlighter' && currentTool !== 'eraser') {
         const r = expandedCanvas.getBoundingClientRect();
         const x = e.clientX - r.left, y = e.clientY - r.top;
-        expCtx.lineWidth = currentTool === 'pen' ? 4 : 15;
+        expCtx.lineWidth = 4;
         expCtx.lineCap = 'round';
-        expCtx.globalCompositeOperation = currentTool === 'pen' ? 'source-over' : 'destination-out';
-        expCtx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
-        expCtx.lineTo(x, y); expCtx.stroke();
-        mirror();
+        expCtx.globalCompositeOperation = 'source-over';
+        expCtx.strokeStyle = currentMarkerColor;
+        expCtx.lineTo(x, y); expCtx.stroke(); mirror();
+      } else if (isDrawing && currentTool === 'eraser' && !currentCardIndexIsText()) {
+        const r = expandedCanvas.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        expCtx.lineWidth = 15;
+        expCtx.lineCap = 'round';
+        expCtx.globalCompositeOperation = 'destination-out';
+        expCtx.lineTo(x, y); expCtx.stroke(); mirror();
       }
     });
 
@@ -252,110 +319,83 @@
       if (isDrawing) { isDrawing = false; cardData[currentCardIndex] = expandedCanvas.toDataURL(); save(); }
     });
 
-    // Card Interaction
     function handleCardMouseDown(e) {
-      const card = e.currentTarget;
-      e.stopPropagation();
-
+      const card = e.currentTarget; e.stopPropagation();
       if (isConnectMode) {
-        if (!firstSelectedCard) {
-          firstSelectedCard = card;
-          card.style.outline = '3px solid #e74c3c';
-        } else {
-          if (firstSelectedCard !== card && !connectionExists(firstSelectedCard, card)) {
-            createConnection(firstSelectedCard, card);
-            save();
-          }
-          firstSelectedCard.style.outline = '';
-          firstSelectedCard = null;
-        }
-        return;
+        if (!firstSelectedCard) { firstSelectedCard = card; card.style.outline = '3px solid #e74c3c'; }
+        else {
+          if (firstSelectedCard !== card && !connectionExists(firstSelectedCard, card)) { createConnection(firstSelectedCard, card); save(); }
+          firstSelectedCard.style.outline = ''; firstSelectedCard = null;
+        } return;
       }
-
-      activeCard = card;
-      isActuallyDragging = false;
-      startPos = {x:e.clientX, y:e.clientY};
-      highestZ++;
-      card.style.zIndex = highestZ;
-      card.classList.add('dragging');
-      
-      const r = card.getBoundingClientRect();
-      offset = {x: (e.clientX - r.left)/zoom, y: (e.clientY - r.top)/zoom};
-
+      activeCard = card; isActuallyDragging = false; startPos = {x:e.clientX, y:e.clientY};
+      highestZ++; card.style.zIndex = highestZ; card.classList.add('dragging');
+      const r = card.getBoundingClientRect(); offset = {x: (e.clientX - r.left)/zoom, y: (e.clientY - r.top)/zoom};
       const onMove = (me) => {
-        if (!activeCard) return;
-        if (Math.hypot(me.clientX - startPos.x, me.clientY - startPos.y) > 5) isActuallyDragging = true;
+        if (!activeCard) return; if (Math.hypot(me.clientX - startPos.x, me.clientY - startPos.y) > 5) isActuallyDragging = true;
         const br = board.getBoundingClientRect();
         activeCard.style.left = (me.clientX - br.left - panX)/zoom - offset.x + 'px';
         activeCard.style.top = (me.clientY - br.top - panY)/zoom - offset.y + 'px';
         connections.forEach(updatePath);
       };
-
       const onUp = () => {
         if (activeCard) {
           activeCard.classList.remove('dragging');
           cardPositions[activeCard.dataset.index] = {left: activeCard.style.left, top: activeCard.style.top, zIndex: activeCard.style.zIndex};
-          save();
-          if (!isActuallyDragging) openCard(activeCard);
-          activeCard = null;
+          save(); if (!isActuallyDragging) openCard(activeCard); activeCard = null;
         }
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
+        window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
       };
-
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
+      window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     }
 
-    function connectionExists(f, t) {
-      return connections.some(c => 
-        (c.from === f && c.to === t) || (c.from === t && c.to === f)
-      );
-    }
+    function connectionExists(f, t) { return connections.some(c => (c.from === f && c.to === t) || (c.from === t && c.to === f)); }
 
-    // Linking
     function createConnection(f, t) {
       const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      p.setAttribute('stroke', '#e74c3c');
-      p.setAttribute('stroke-width', '3');
-      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', '#e74c3c'); p.setAttribute('stroke-width', '3'); p.setAttribute('fill', 'none');
       p.setAttribute('style', 'filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5))');
-      svgLayer.appendChild(p);
-      const c = {from: f, to: t, path: p};
-      connections.push(c);
-      updatePath(c);
+      p.style.pointerEvents = 'visibleStroke'; p.style.cursor = 'pointer';
+      p.addEventListener('contextmenu', (e) => { e.preventDefault(); p.remove(); const idx = connections.findIndex(c => c.path === p); if (idx > -1) connections.splice(idx, 1); save(); });
+      svgLayer.appendChild(p); const c = {from: f, to: t, path: p}; connections.push(c); updatePath(c);
     }
 
     function updatePath(c) {
-      const x1 = c.from.offsetLeft + c.from.offsetWidth/2;
-      const y1 = c.from.offsetTop + c.from.offsetHeight/2;
-      const x2 = c.to.offsetLeft + c.to.offsetWidth/2;
-      const y2 = c.to.offsetTop + c.to.offsetHeight/2;
+      const x1 = c.from.offsetLeft + c.from.offsetWidth/2, y1 = c.from.offsetTop + c.from.offsetHeight/2, x2 = c.to.offsetLeft + c.to.offsetWidth/2, y2 = c.to.offsetTop + c.to.offsetHeight/2;
       c.path.setAttribute('d', "M " + x1 + " " + y1 + " Q " + (x1+x2)/2 + " " + ((y1+y2)/2 + 40) + " " + x2 + " " + y2);
     }
 
-    // Expanded View
+    function currentCardIndexIsText() {
+      const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
+      return !card.querySelector('img');
+    }
+
     function openCard(card) {
       currentCardIndex = card.dataset.index;
-      const img = card.querySelector('img'), txt = card.querySelector('.card-text');
-      const dImg = document.getElementById('dialog-image'), dTxt = document.getElementById('dialog-text');
-      
-      document.getElementById('dialog-title').textContent = card.querySelector('.card-title').textContent;
+      const img = card.querySelector('img'), txt = card.querySelector('.card-text'), dImg = document.getElementById('dialog-image'), dTxt = document.getElementById('dialog-text');
+      titleInput.value = card.querySelector('.card-title').textContent;
       cardNoteTextarea.value = cardNotes[currentCardIndex] || '';
       
       dImg.style.display = img ? 'block' : 'none'; if(img) dImg.src = img.src;
-      dTxt.style.display = txt ? 'block' : 'none'; if(txt) dTxt.textContent = txt.textContent;
+      dTxt.style.display = txt ? 'block' : 'none'; if(txt) dTxt.innerHTML = cardHighlights[currentCardIndex] || txt.innerHTML;
       
+      const toolbar = document.getElementById('drawing-toolbar');
+      const penBtns = toolbar.querySelectorAll('[id^="tool-pen-"]');
+      
+      if (img) {
+        penBtns.forEach(b => b.style.display = 'inline-block'); highlightBtn.style.display = 'none';
+        expandedCanvas.style.display = 'block'; setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
+      } else {
+        penBtns.forEach(b => b.style.display = 'none'); highlightBtn.style.display = 'inline-block';
+        expandedCanvas.style.display = 'none'; setHighlightTool();
+      }
       dialog.showModal();
-      
       setTimeout(() => {
-        const r = expandedCanvas.parentNode.getBoundingClientRect();
-        expandedCanvas.width = r.width; expandedCanvas.height = r.height;
-        expCtx.clearRect(0, 0, expandedCanvas.width, expandedCanvas.height);
-        if (cardData[currentCardIndex]) {
-          const i = new Image();
-          i.onload = () => expCtx.drawImage(i, 0, 0);
-          i.src = cardData[currentCardIndex];
+        if (img) {
+          const r = expandedCanvas.parentNode.getBoundingClientRect();
+          expandedCanvas.width = r.width; expandedCanvas.height = r.height;
+          expCtx.clearRect(0, 0, expandedCanvas.width, expandedCanvas.height);
+          if (cardData[currentCardIndex]) { const i = new Image(); i.onload = () => expCtx.drawImage(i, 0, 0); i.src = cardData[currentCardIndex]; }
         }
       }, 50);
     }
@@ -365,55 +405,46 @@
       const card = document.querySelector(".card[data-index='" + currentCardIndex + "']");
       const canvas = card.querySelector('.card-canvas');
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(expandedCanvas, 0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(expandedCanvas, 0, 0, canvas.width, canvas.height);
     }
 
-    // UI Events
     toggleBtn.addEventListener('click', () => {
-      isConnectMode = !isConnectMode;
-      toggleBtn.classList.toggle('active', isConnectMode);
-      board.classList.toggle('connect-mode', isConnectMode);
+      isConnectMode = !isConnectMode; toggleBtn.classList.toggle('active', isConnectMode); board.classList.toggle('connect-mode', isConnectMode);
       toggleBtn.textContent = "Connect Mode: " + (isConnectMode ? 'ON' : 'OFF');
-      if (!isConnectMode) {
-        if (firstSelectedCard) firstSelectedCard.style.outline = '';
-        firstSelectedCard = null;
-      }
+      if (!isConnectMode) { if (firstSelectedCard) firstSelectedCard.style.outline = ''; firstSelectedCard = null; }
     });
 
-    document.getElementById('reset-board').addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset?')) {
-        localStorage.clear(); location.reload();
-      }
-    });
-
+    document.getElementById('reset-board').addEventListener('click', () => { if (confirm('Reset?')) { localStorage.clear(); location.reload(); }});
     document.getElementById('close-dialog').addEventListener('click', () => dialog.close());
-    
-    cardNoteTextarea.addEventListener('input', () => {
-      if (currentCardIndex !== null) {
-        cardNotes[currentCardIndex] = cardNoteTextarea.value;
-        save();
-      }
-    });
+    cardNoteTextarea.addEventListener('input', () => { if (currentCardIndex !== null) { cardNotes[currentCardIndex] = cardNoteTextarea.value; save(); }});
+    titleInput.addEventListener('input', () => { if (currentCardIndex !== null) { cardTitles[currentCardIndex] = titleInput.value; document.querySelector(".card[data-index='" + currentCardIndex + "']").querySelector('.card-title').textContent = titleInput.value; save(); }});
 
     expandedCanvas.addEventListener('mousedown', (e) => {
-      isDrawing = true;
-      expCtx.beginPath();
-      const r = expandedCanvas.getBoundingClientRect();
-      expCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
+      if (currentTool === 'highlighter' || currentTool === 'eraser') return;
+      isDrawing = true; expCtx.beginPath(); const r = expandedCanvas.getBoundingClientRect(); expCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
     });
 
-    // Drawing toolbar
-    document.getElementById('tool-pen').addEventListener('click', () => {
-      currentTool = 'pen';
-      document.getElementById('tool-pen').classList.add('active');
-      document.getElementById('tool-eraser').classList.remove('active');
-    });
-    document.getElementById('tool-eraser').addEventListener('click', () => {
+    function setPen(color, btnId) {
+      currentTool = 'pen'; currentMarkerColor = color;
+      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+      document.getElementById(btnId).classList.add('active');
+    }
+
+    function setHighlightTool() {
+      currentTool = 'highlighter';
+      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+      highlightBtn.classList.add('active');
+    }
+
+    document.getElementById('tool-pen-red').onclick = () => setPen('rgba(231, 76, 60, 0.7)', 'tool-pen-red');
+    document.getElementById('tool-pen-blue').onclick = () => setPen('rgba(52, 152, 219, 0.7)', 'tool-pen-blue');
+    document.getElementById('tool-pen-black').onclick = () => setPen('rgba(44, 62, 80, 0.7)', 'tool-pen-black');
+    document.getElementById('tool-eraser').onclick = () => {
       currentTool = 'eraser';
-      document.getElementById('tool-eraser').classList.add('active');
-      document.getElementById('tool-pen').classList.remove('active');
-    });
+      document.querySelectorAll('#drawing-toolbar button').forEach(b => b.classList.remove('active'));
+      eraserBtn.classList.add('active');
+    };
+    highlightBtn.onclick = setHighlightTool;
 
     init();
   </script>

@@ -102,11 +102,11 @@ Explicitly excluded from the PoC. Documented to prevent scope creep.
 | PERS-03 | Phase 7 | DONE |
 | PERS-04 | Phase 7 | DONE |
 | BOARD-03 | Phase 8 | DONE |
-| CARD-03 | Phase 9 | Pending |
-| CONN-05 | Phase 9 | Pending |
-| ANNO-04 | Phase 10 | Pending |
-| ANNO-05 | Phase 10 | Pending |
-| ANNO-06 | Phase 10 | Pending |
+| CARD-03 | Phase 9 | DONE |
+| CONN-05 | Phase 9 | DONE |
+| ANNO-04 | Phase 10 | DONE |
+| ANNO-05 | Phase 10 | DONE |
+| ANNO-06 | Phase 10 | DONE |
 
 **Coverage:**
 - v1 requirements: 10 total

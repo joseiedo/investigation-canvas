@@ -149,5 +149,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Note System | 2/2 | Completed | 2026-02-24 |
 | 7. Full Persistence | 2/2 | Completed | 2026-02-24 |
 | 8. Board Navigation (Pan/Zoom) | 1/1 | Completed | 2026-02-24 |
-| 9. Investigation Management | 0/TBD | Not started | - |
-| 10. Contextual Analysis (Highlighting) | 0/TBD | Not started | - |
+| 9. Investigation Management | 2/2 | Completed | 2026-02-24 |
+| 10. Contextual Analysis (Highlighting) | 2/2 | Completed | 2026-02-24 |
